@@ -79,3 +79,11 @@ export const reLogin = () => {
     method: 'post',
   })
 }
+
+//根据账号ID获取菜单列表
+export const listByUserId = (userId) => {
+  return request({
+    url: `/system/sys-menu/listByUserId/${userId}`,
+    method: 'get'
+  })
+};

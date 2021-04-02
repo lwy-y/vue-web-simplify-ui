@@ -130,8 +130,7 @@
 </template>
 
 <script>
-
-import { Login } from '../api/index'; // 测试接口可删
+import { Login, listByUserId } from '../api/index'; // 测试接口可删
 import md5 from 'js-md5';
 import config from '@/config';
 
@@ -140,295 +139,295 @@ const REMERBER_ACCOUT_LIST = 'REMERBER_ACCOUT_LIST';
 const REMERBER_ACCOUT_LIST_TIME = 'REMERBER_ACCOUT_LIST_TIME';
 
 export default {
-  name: 'Login',
-  data: function () {
-    return {
-      codeImg: config.rootPath + 'system/validateCode/getValidateCodeImage?' + Math.random(),
-      param: {
-        userAccount: '',
-        password: '',
-        // randImageValidateCode: ''
-      },
-      rules: {
-        userAccount: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-        password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-        // randImageValidateCode: [{ required: true, message: '请输入图形验证码', trigger: 'blur' }]
-      },
-      loading: false,
+    name: 'Login',
+    data: function () {
+        return {
+            codeImg: config.rootPath + 'system/validateCode/getValidateCodeImage?' + Math.random(),
+            param: {
+                userAccount: '',
+                password: ''
+                // randImageValidateCode: ''
+            },
+            rules: {
+                userAccount: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+                password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+                // randImageValidateCode: [{ required: true, message: '请输入图形验证码', trigger: 'blur' }]
+            },
+            loading: false,
 
-      //记住账号功能
-      remerberStatus: '0',
-      showAccount: false,
-      remerberAccoutList: {}
-    };
-  },
-  methods: {
-    /**
-     *  登录
-     */
-    Login () {
-      let param = Object.assign({}, this.param);
-      param.password = md5(this.param.password);//登录密码加密
-      this.loading = true;
-      Login(param)
-        .then(res => {
-          //console.log(res);
-          this.loading = false;
-          sessionStorage.setItem('ms_username', res.data.userName);
-          // sessionStorage.setItem('menus', JSON.stringify(res.data.menus));//暂时注释，待登录数据含有菜单列表后解决
-          delete res.data.userName;
-          sessionStorage.setItem('user', JSON.stringify(res.data));
-          sessionStorage.setItem('token', JSON.stringify(res.data.token));
-          sessionStorage.setItem("tokenTime", (new Date().getTime()));
-          //记住账号密码
-          this.remerberAccout(this.param);
-          // this.listByUserId(res.data.userId)
-          this.$router.push('/');
-        })
-        .catch(err => {
-          this.loading = false;
-          //console.error('登录错误：', err);
-        });
+            //记住账号功能
+            remerberStatus: '0',
+            showAccount: false,
+            remerberAccoutList: {}
+        };
     },
+    methods: {
+        /**
+         *  登录
+         */
+        Login() {
+            let param = Object.assign({}, this.param);
+            param.password = md5(this.param.password); //登录密码加密
+            this.loading = true;
+            Login(param)
+                .then((res) => {
+                    //console.log(res);
+                    this.loading = false;
+                    sessionStorage.setItem('ms_username', res.data.userName);
+                    // sessionStorage.setItem('menus', JSON.stringify(res.data.menus));//暂时注释，待登录数据含有菜单列表后解决
+                    delete res.data.userName;
+                    sessionStorage.setItem('user', JSON.stringify(res.data));
+                    sessionStorage.setItem('token', JSON.stringify(res.data.token));
+                    sessionStorage.setItem('tokenTime', new Date().getTime());
+                    //记住账号密码
+                    this.remerberAccout(this.param);
+                    this.listByUserId(res.data.userId)
+                    this.$router.push('/');
+                })
+                .catch((err) => {
+                    this.loading = false;
+                    //console.error('登录错误：', err);
+                });
+        },
 
-    /**
-     * 根据登录账号ID获取菜单列表
-     * @param userId{String} 账号ID
-     */
-    listByUserId (userId) {
-      listByUserId(userId).then(res => {
-        this.$message.success(`登录成功`);
-        sessionStorage.setItem('menus', JSON.stringify(res.data));
-        this.$router.push('/');
-      })
-    },
-    refreshValidateCode () {
-      this.codeImg = config.rootPath + 'system/validateCode/getValidateCodeImage?' + Math.random();
-    },
-    submitForm () {
-      this.$refs.login.validate(valid => {
-        if (valid) {
-          this.Login();
+        /**
+         * 根据登录账号ID获取菜单列表
+         * @param userId{String} 账号ID
+         */
+        listByUserId(userId) {
+            listByUserId(userId).then((res) => {
+                this.$message.success(`登录成功`);
+                sessionStorage.setItem('menus', JSON.stringify(res.data));
+                this.$router.push('/');
+            });
+        },
+        refreshValidateCode() {
+            this.codeImg = config.rootPath + 'system/validateCode/getValidateCodeImage?' + Math.random();
+        },
+        submitForm() {
+            this.$refs.login.validate((valid) => {
+                if (valid) {
+                    this.Login();
+                }
+            });
+        },
+        getPsw() {
+            this.$alert('若忘记密码,请直接联系管理员', '忘记密码', {
+                confirmButtonText: '确定',
+                callback: () => {}
+            });
+        },
+        /**
+         * 修改记住当前账号和密码的状态
+         * 将修改缓存到本地
+         * @param {boolern}val checkbox选择的状态值
+         */
+        changeRemerberStatus(val) {
+            this.remerberStatus = val;
+            //console.log('当前记住账号状态：', this.remerberStatus);
+            if (this.remerberStatus == 0) {
+                this.clearRemerberAccout();
+            }
+            // 本地缓存记住当前的状态
+            localStorage.setItem(REMERBER_STATUS, this.remerberStatus);
+        },
+        /**
+         * 获取本地记住状态
+         */
+        getLocalRemerberStatus() {
+            let status = localStorage.getItem(REMERBER_STATUS);
+            this.remerberStatus = status;
+            //console.log('当前记住状态：', status);
+        },
+        /**
+         * 记住当前输入正确的账号
+         * @param {object} userAccount 当前登录成功过的账号
+         * 包含字段：{
+         *  userAccount: '',
+         *  password: '',
+         * }
+         */
+        remerberAccout(userAccount) {
+            if (this.remerberStatus == null) {
+                this.remerberStatus = 0;
+            }
+            //判断当前账号是否支持记住，不记住则跳过
+            if (this.remerberStatus == 0) {
+                return;
+            }
+            //如果记住状态，更新本地记住的账号列表
+            let accoutList = this.getRemerberAccoutList();
+            let accoutTimeList = this.getRemerberAccoutTimeList();
+            accoutList[userAccount.userAccount] = userAccount.password;
+            accoutTimeList[userAccount.userAccount] = new Date().getTime();
+            //console.log('当前记住的账号列表：', accoutList);
+            localStorage.setItem(REMERBER_ACCOUT_LIST, JSON.stringify(accoutList));
+            localStorage.setItem(REMERBER_ACCOUT_LIST_TIME, JSON.stringify(accoutTimeList));
+        },
+        /**
+         * 获取记住的账号列表
+         * @returns  {map} list 本地记住的账号列表
+         */
+        getRemerberAccoutList() {
+            let accoutList = localStorage.getItem(REMERBER_ACCOUT_LIST);
+            if (accoutList) {
+                try {
+                    accoutList = JSON.parse(accoutList);
+                } catch (error) {
+                    accoutList = {};
+                }
+            } else {
+                accoutList = {};
+            }
+            this.remerberAccoutList = accoutList;
+            return accoutList;
+        },
+        /**
+         * 获取记住的账号时间列表
+         * @returns  {map} list 本地记住的账号时间列表
+         */
+        getRemerberAccoutTimeList() {
+            let accoutList = localStorage.getItem(REMERBER_ACCOUT_LIST_TIME);
+            if (accoutList) {
+                try {
+                    accoutList = JSON.parse(accoutList);
+                } catch (error) {
+                    accoutList = {};
+                }
+            } else {
+                accoutList = {};
+            }
+            return accoutList;
+        },
+        /**
+         * 清空记住的账号列表
+         */
+        clearRemerberAccout() {
+            this.remerberAccoutList = {};
+            localStorage.removeItem(REMERBER_ACCOUT_LIST);
+            localStorage.removeItem(REMERBER_ACCOUT_LIST_TIME);
+        },
+        /**
+         * 选中账号填充
+         * @param {string} account 账号
+         * @param {pwd} pwd 密码
+         */
+        selectAccount(account, pwd) {
+            this.param.userAccount = account;
+            this.param.password = pwd;
+            //隐藏内容
+            this.showAccount = false;
+            //清除表单校验
+            this.$nextTick(() => {
+                this.$refs.login.clearValidate();
+            });
+        },
+        /**
+         * 清空记住的账号列表
+         * @param {string} account 账号
+         * @param {event} evt 点击事件
+         */
+        deleteAccount(account, evt) {
+            this.$confirm(`确定要忘记账号【${account}】吗？`, '提示', {
+                type: 'warning'
+            })
+                .then(() => {
+                    if (this.param.userAccount == account) {
+                        //当前表单数据相同，则清空
+                        this.param.userAccount = '';
+                        this.param.password = '';
+                    }
+                    //删除当前账号
+                    delete this.remerberAccoutList[account];
+                    this.showAccount = false;
+                    //console.log('删除后列表：', this.remerberAccoutList);
+                    //更新本地数据
+                    localStorage.setItem(REMERBER_ACCOUT_LIST, JSON.stringify(this.remerberAccoutList));
+                    let accoutTimeList = this.getRemerberAccoutTimeList();
+                    delete accoutTimeList[account];
+                    localStorage.setItem(REMERBER_ACCOUT_LIST_TIME, JSON.stringify(accoutTimeList));
+                })
+                .catch(() => {});
+            //阻止冒泡
+            evt.stopPropagation();
+            return false;
+        },
+        /**
+         * 填充默认账号
+         */
+        fillDefaultAccout() {
+            //获取记住的账号列表
+            let accountList = this.getRemerberAccoutList();
+            let accounts = Object.keys(accountList);
+            //存在本地账号，默认选中时间最新的一个
+            if (accounts && accounts.length) {
+                //获取账号对应的时间
+                let accountTimeList = this.getRemerberAccoutTimeList();
+                //查询最新的账号时间
+                let max = 0,
+                    account = '';
+                for (let key in accountTimeList) {
+                    if (accountTimeList[key] > max) {
+                        max = accountTimeList[key];
+                        account = key;
+                    }
+                }
+                //存在账号则选中
+                if (account && account.length && this.remerberStatus == 1) {
+                    let pwd = accountList[account];
+                    this.selectAccount(account, pwd);
+                    //console.log('默认填充账号：', account);
+                }
+            }
+        },
+        /**
+         * 账号输入监听处理
+         */
+        onFocus(evt) {
+            let accounts = Object.keys(this.remerberAccoutList);
+            //console.log('accounts==', accounts);
+            if (accounts && accounts.length) {
+                this.showAccount = true;
+                let dom = document.querySelector('.el-popover.account-list');
+                //console.log('dom==', dom);
+                dom.style['max-height'] = '150px';
+                dom.style['overflow-y'] = 'auto';
+            } else {
+                //console.log(222);
+                this.showAccount = false;
+            }
+            //阻止冒泡
+            evt.stopPropagation();
+            return false;
+        },
+        /**
+         * 输入监听，如果输入文字则隐藏pop框
+         */
+        onInput(val) {
+            if (val && val.length) {
+                this.showAccount = false;
+            }
+        },
+        /**
+         * 监听屏幕点击事件，隐藏pop框
+         * @author lmh
+         */
+        hidePop(evt) {
+            //判断是否来院输入框弹出点击和删除按钮点击
+            if (!evt.target.classList.contains('el-input__inner')) {
+                this.showAccount = false;
+            }
         }
-      });
     },
-    getPsw () {
-      this.$alert('若忘记密码,请直接联系管理员', '忘记密码', {
-        confirmButtonText: '确定',
-        callback: () => { }
-      })
-    },
-    /**
-     * 修改记住当前账号和密码的状态
-     * 将修改缓存到本地
-     * @param {boolern}val checkbox选择的状态值
-     */
-    changeRemerberStatus (val) {
-      this.remerberStatus = val;
-      //console.log('当前记住账号状态：', this.remerberStatus);
-      if (this.remerberStatus == 0) {
-        this.clearRemerberAccout();
-      }
-      // 本地缓存记住当前的状态
-      localStorage.setItem(REMERBER_STATUS, this.remerberStatus);
-    },
-    /**
-     * 获取本地记住状态
-     */
-    getLocalRemerberStatus () {
-      let status = localStorage.getItem(REMERBER_STATUS);
-      this.remerberStatus = status;
-      //console.log('当前记住状态：', status);
-    },
-    /**
-     * 记住当前输入正确的账号
-     * @param {object} userAccount 当前登录成功过的账号
-     * 包含字段：{
-     *  userAccount: '',
-     *  password: '',
-     * }
-     */
-    remerberAccout (userAccount) {
-      if (this.remerberStatus == null) {
-        this.remerberStatus = 0
-      }
-      //判断当前账号是否支持记住，不记住则跳过
-      if (this.remerberStatus == 0) {
-        return;
-      }
-      //如果记住状态，更新本地记住的账号列表
-      let accoutList = this.getRemerberAccoutList();
-      let accoutTimeList = this.getRemerberAccoutTimeList();
-      accoutList[userAccount.userAccount] = userAccount.password;
-      accoutTimeList[userAccount.userAccount] = new Date().getTime();
-      //console.log('当前记住的账号列表：', accoutList);
-      localStorage.setItem(REMERBER_ACCOUT_LIST, JSON.stringify(accoutList));
-      localStorage.setItem(REMERBER_ACCOUT_LIST_TIME, JSON.stringify(accoutTimeList));
-    },
-    /**
-     * 获取记住的账号列表
-     * @returns  {map} list 本地记住的账号列表
-     */
-    getRemerberAccoutList () {
-      let accoutList = localStorage.getItem(REMERBER_ACCOUT_LIST);
-      if (accoutList) {
-        try {
-          accoutList = JSON.parse(accoutList);
-        } catch (error) {
-          accoutList = {};
-        }
-      } else {
-        accoutList = {};
-      }
-      this.remerberAccoutList = accoutList;
-      return accoutList;
-    },
-    /**
-     * 获取记住的账号时间列表
-     * @returns  {map} list 本地记住的账号时间列表
-     */
-    getRemerberAccoutTimeList () {
-      let accoutList = localStorage.getItem(REMERBER_ACCOUT_LIST_TIME);
-      if (accoutList) {
-        try {
-          accoutList = JSON.parse(accoutList);
-        } catch (error) {
-          accoutList = {};
-        }
-      } else {
-        accoutList = {};
-      }
-      return accoutList;
-    },
-    /**
-     * 清空记住的账号列表
-     */
-    clearRemerberAccout () {
-      this.remerberAccoutList = {};
-      localStorage.removeItem(REMERBER_ACCOUT_LIST);
-      localStorage.removeItem(REMERBER_ACCOUT_LIST_TIME);
-    },
-    /**
-     * 选中账号填充
-     * @param {string} account 账号
-     * @param {pwd} pwd 密码
-     */
-    selectAccount (account, pwd) {
-      this.param.userAccount = account;
-      this.param.password = pwd;
-      //隐藏内容
-      this.showAccount = false;
-      //清除表单校验
-      this.$nextTick(() => {
-        this.$refs.login.clearValidate();
-      });
-    },
-    /**
-     * 清空记住的账号列表
-     * @param {string} account 账号
-     * @param {event} evt 点击事件
-     */
-    deleteAccount (account, evt) {
-      this.$confirm(`确定要忘记账号【${account}】吗？`, '提示', {
-        type: 'warning'
-      })
-        .then(() => {
-          if (this.param.userAccount == account) {
-            //当前表单数据相同，则清空
-            this.param.userAccount = '';
-            this.param.password = '';
-          }
-          //删除当前账号
-          delete this.remerberAccoutList[account];
-          this.showAccount = false;
-          //console.log('删除后列表：', this.remerberAccoutList);
-          //更新本地数据
-          localStorage.setItem(REMERBER_ACCOUT_LIST, JSON.stringify(this.remerberAccoutList));
-          let accoutTimeList = this.getRemerberAccoutTimeList();
-          delete accoutTimeList[account];
-          localStorage.setItem(REMERBER_ACCOUT_LIST_TIME, JSON.stringify(accoutTimeList));
-        })
-        .catch(() => { });
-      //阻止冒泡
-      evt.stopPropagation();
-      return false;
-    },
-    /**
-     * 填充默认账号
-     */
-    fillDefaultAccout () {
-      //获取记住的账号列表
-      let accountList = this.getRemerberAccoutList();
-      let accounts = Object.keys(accountList);
-      //存在本地账号，默认选中时间最新的一个
-      if (accounts && accounts.length) {
-        //获取账号对应的时间
-        let accountTimeList = this.getRemerberAccoutTimeList();
-        //查询最新的账号时间
-        let max = 0,
-          account = '';
-        for (let key in accountTimeList) {
-          if (accountTimeList[key] > max) {
-            max = accountTimeList[key];
-            account = key;
-          }
-        }
-        //存在账号则选中
-        if (account && account.length && this.remerberStatus == 1) {
-          let pwd = accountList[account];
-          this.selectAccount(account, pwd);
-          //console.log('默认填充账号：', account);
-        }
-      }
-    },
-    /**
-     * 账号输入监听处理
-     */
-    onFocus (evt) {
-      let accounts = Object.keys(this.remerberAccoutList);
-      //console.log('accounts==', accounts);
-      if (accounts && accounts.length) {
-        this.showAccount = true;
-        let dom = document.querySelector('.el-popover.account-list');
-        //console.log('dom==', dom);
-        dom.style['max-height'] = '150px';
-        dom.style['overflow-y'] = 'auto';
-      } else {
-        //console.log(222);
-        this.showAccount = false;
-      }
-      //阻止冒泡
-      evt.stopPropagation();
-      return false;
-    },
-    /**
-     * 输入监听，如果输入文字则隐藏pop框
-     */
-    onInput (val) {
-      if (val && val.length) {
-        this.showAccount = false;
-      }
-    },
-    /**
-     * 监听屏幕点击事件，隐藏pop框
-     * @author lmh
-     */
-    hidePop (evt) {
-      //判断是否来院输入框弹出点击和删除按钮点击
-      if (!evt.target.classList.contains('el-input__inner')) {
-        this.showAccount = false;
-      }
+    created() {
+        localStorage.removeItem('list');
+        // sessionStorage.removeItem('menus');
+        sessionStorage.clear();
+        //获取当前记住账号状态
+        this.getLocalRemerberStatus();
+        //默认选中最新的一个
+        this.fillDefaultAccout();
     }
-  },
-  created () {
-    localStorage.removeItem('list');
-    // sessionStorage.removeItem('menus');
-    sessionStorage.clear();
-    //获取当前记住账号状态
-    this.getLocalRemerberStatus();
-    //默认选中最新的一个
-    this.fillDefaultAccout();
-  }
 };
 </script>
 
