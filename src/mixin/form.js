@@ -25,7 +25,7 @@ Vue.mixin({
             if(val=='' || reg.test(val)){
                 return true;
             }
-            this.$message.warning(errMsg || '请输入一个数字串');
+            this.$notify.warning(errMsg || '请输入一个数字串');
             return false;
         },
 

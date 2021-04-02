@@ -1,4 +1,4 @@
-import { Message, MessageBox } from 'element-ui'
+import { Notification, MessageBox } from 'element-ui'
 import { failTest } from './failText'
 import { errorText } from './errorText'
 import R from '@/router';
@@ -16,14 +16,14 @@ class Me {
     }
     // 成功提示
     success(title) {
-        Message.success(title)
+        Notification.success(title)
     }
     // 失败提示
     error(code, title) {
         if (errorText[code]) {
             //登录信息失效，直接跳转
             // R.push({path : errorText[code].path})
-            Message.error({
+            Notification.error({
                 message: title,
                 type: 'error',
                 onClose: () => {
@@ -31,7 +31,7 @@ class Me {
                 }
             })
         } else {
-            Message.error({
+            Notification.error({
                 dangerouslyUseHTMLString: true,
                 message: title,
                 type: 'error',
@@ -41,7 +41,7 @@ class Me {
     //系统一次提示
     fail(code) {
         if (failTest[code]) {
-            Message.error({
+            Notification.error({
                 message: failTest[code].title,
                 type: 'error',
                 onClose: () => {
@@ -51,7 +51,7 @@ class Me {
                 }
             })
         } else {
-            Message.error('系统异常')
+            Notification.error('系统异常')
         }
     }
 }

@@ -76,7 +76,7 @@ export default {
                         this.$router.push('/login');
                     })
                     .catch(err => {
-                        this.$message.error('退出失败');
+                        this.$notify.error('退出失败');
                     });
             }
         },

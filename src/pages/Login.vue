@@ -196,7 +196,7 @@ export default {
          */
         listByUserId(userId) {
             listByUserId(userId).then((res) => {
-                this.$message.success(`登录成功`);
+                this.$notify.success(`登录成功`);
                 sessionStorage.setItem('menus', JSON.stringify(res.data));
                 this.$router.push('/');
             });
